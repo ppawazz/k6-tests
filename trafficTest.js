@@ -24,7 +24,6 @@ const loadProfile = __ENV.LOAD_PROFILE || 'low'; // Default ke 'low' jika tidak 
 let testStages;
 switch (loadProfile) {
   case 'low':
-    console.log('Running LOW load profile (Target: 100 VUs)');
     testStages = [
       { duration: '15s', target: 50 },   // Pemanasan
       { duration: '30s', target: 100 },  // Naik ke beban puncak
@@ -34,7 +33,6 @@ switch (loadProfile) {
     break;
 
   case 'medium':
-    console.log('Running MEDIUM load profile (Target: 500 VUs)');
     testStages = [
       { duration: '20s', target: 100 },  // Pemanasan
       { duration: '40s', target: 500 },  // Naik ke beban puncak
@@ -44,7 +42,6 @@ switch (loadProfile) {
     break;
 
   case 'high':
-    console.log('Running HIGH load profile (Target: 1000 VUs)');
     testStages = [
       { duration: '30s', target: 250 },   // Pemanasan
       { duration: '1m', target: 1000 },  // Naik ke beban puncak
