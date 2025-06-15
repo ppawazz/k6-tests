@@ -1,7 +1,6 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
-import { textSummary } from 'k6/x/reporters';
 
 
 // ====================================================================================
@@ -107,27 +106,18 @@ export default function () {
   sleep(1);
 }
 
-// ====================================================================================
-// 5. EKSPOR LAPORAN
-// Fungsi ini akan menangani pembuatan file laporan ringkasan.
-// ====================================================================================
-export function handleSummary(data) {
-    console.log('Finished executing tests. Summary report:');
+// // ====================================================================================
+// // 5. EKSPOR LAPORAN
+// // Fungsi ini akan menangani pembuatan file laporan ringkasan.
+// // ====================================================================================
+// export function handleSummary(data) {
+//     console.log('Finished executing tests. Summary report:');
     
-    // Menghasilkan ringkasan teks di konsol
-    console.log(textSummary(data, { indent: ' ', enableColors: true }));
+//     // Menghasilkan ringkasan teks di konsol
+//     console.log(textSummary(data, { indent: ' ', enableColors: true }));
     
-    // Mengembalikan objek yang akan disimpan K6 ke file JSON
-    return {
-        'summary.json': JSON.stringify(data, null, 2), // Laporan dalam format JSON yang rapi
-    };
-}
-
-// # Menjalankan beban RENDAH dan menyimpan laporan
-// k6 run --env LOAD_PROFILE=low --env TARGET_URL="http://54.251.128.102:3000/api/data" --summary-export="D:\Documents\Doc. Daffa\KULIAH\SKRIPSI\report\baseline_low_summary.json" test.js
-
-// # Menjalankan beban SEDANG dan menyimpan laporan
-// k6 run --env LOAD_PROFILE=medium --env TARGET_URL="http://54.251.128.102:3000/api/data" --summary-export="D:\Documents\Doc. Daffa\KULIAH\SKRIPSI\report\baseline_medium_summary.json" test.js
-
-// # Menjalankan beban TINGGI dan menyimpan laporan
-// k6 run --env LOAD_PROFILE=high --env TARGET_URL="http://54.251.128.102:3000/api/data" --summary-export="D:\Documents\Doc. Daffa\KULIAH\SKRIPSI\report\baseline_high_summary.json" test.js
+//     // Mengembalikan objek yang akan disimpan K6 ke file JSON
+//     return {
+//         'summary.json': JSON.stringify(data, null, 2), // Laporan dalam format JSON yang rapi
+//     };
+// }
