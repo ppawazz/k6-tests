@@ -1,15 +1,14 @@
 import http from 'k6/http';
+import { textSummary } from "k6/x/reporters";
 import { check, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
 import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
-// 1. Definisi Metrik Kustom untuk Laporan
 export const responseTime = new Trend('response_time_ms');
 export const successRate = new Rate('success_rate');
 export const errorRate = new Rate('error_rate');
 export const requestCounter = new Counter('total_requests');
 
-// 2. Definisi Profil Beban dan Tahapannya
 const loadProfile = __ENV.LOAD_PROFILE || 'low';
 const stages = {
   low: [
@@ -32,9 +31,8 @@ const stages = {
   ],
 };
 
-// 3. Opsi Utama Pengujian
 export const options = {
-  stages: stages[loadProfile] || stages.low, // Pilih stage sesuai profil, default ke 'low'
+  stages: stages[loadProfile] || stages.low, 
   thresholds: {
     'http_req_duration': ['p(95)<200'],
     'success_rate': ['rate>=0.99'],
@@ -42,7 +40,6 @@ export const options = {
   },
 };
 
-// 4. Logika Utama yang Dijalankan oleh Virtual User
 export default function () {
   const targetURL = __ENV.TARGET_URL;
   const res = http.get(targetURL);
@@ -56,12 +53,13 @@ export default function () {
   sleep(1);
 }
 
-// 5. Fungsi untuk Menghasilkan Laporan HTML
 export function handleSummary(data) {
-  // Membuat nama file yang unik berdasarkan profil beban dan waktu saat ini
-  const profile = loadProfile.toUpperCase();
+  console.log('Test Summary:');
+  console.log(textSummary(data, { indent: ' ', enableColors: true }));
+
+  const profile = __ENV.LOAD_PROFILE || 'unknown';
   const timestamp = new Date().toISOString().replace(/:/g, '-');
-  const filename = `report-${profile}-${timestamp}.html`;
+  const filename = `report-${profile.toUpperCase()}-${timestamp}.html`;
 
   return {
     [filename]: htmlReport(data),
