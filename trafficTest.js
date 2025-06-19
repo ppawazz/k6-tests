@@ -1,71 +1,52 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
+import { htmlReport } from "https://raw.githubusercontent.com/benc-uk/k6-reporter/main/dist/bundle.js";
 
+// 1. Definisi Metrik Kustom untuk Laporan
+export const responseTime = new Trend('response_time_ms');
+export const successRate = new Rate('success_rate');
+export const errorRate = new Rate('error_rate');
+export const requestCounter = new Counter('total_requests');
 
-const responseTime = new Trend('response_time_ms');   
-const successRate = new Rate('success_rate');         
-const errorRate = new Rate('error_rate');             
-const requestCounter = new Counter('total_requests'); 
-
+// 2. Definisi Profil Beban dan Tahapannya
 const loadProfile = __ENV.LOAD_PROFILE || 'low';
+const stages = {
+  low: [
+    { duration: '15s', target: 50 },
+    { duration: '30s', target: 100 },
+    { duration: '1m', target: 100 },
+    { duration: '10s', target: 0 },
+  ],
+  medium: [
+    { duration: '20s', target: 100 },
+    { duration: '40s', target: 500 },
+    { duration: '1m', target: 500 },
+    { duration: '15s', target: 0 },
+  ],
+  high: [
+    { duration: '30s', target: 250 },
+    { duration: '1m', target: 1000 },
+    { duration: '1m', target: 1000 },
+    { duration: '20s', target: 0 },
+  ],
+};
 
-let testStages;
-switch (loadProfile) {
-  case 'low':
-    testStages = [
-      { duration: '15s', target: 50 },   
-      { duration: '30s', target: 100 },  
-      { duration: '1m', target: 100 },   
-      { duration: '10s', target: 0 },    
-    ];
-    break;
-
-  case 'medium':
-    testStages = [
-      { duration: '20s', target: 100 },  
-      { duration: '40s', target: 500 },  
-      { duration: '1m', target: 500 },   
-      { duration: '15s', target: 0 },   
-    ];
-    break;
-
-  case 'high':
-    testStages = [
-      { duration: '30s', target: 250 },  
-      { duration: '1m', target: 1000 },  
-      { duration: '1m', target: 1000 },  
-      { duration: '20s', target: 0 },    
-    ];
-    break;
-  
-  default:
-      console.log(`Unknown profile "${loadProfile}". Running LOW load profile.`);
-      testStages = [
-        { duration: '30s', target: 100 },
-        { duration: '1m', target: 100 },
-        { duration: '10s', target: 0 },
-      ];
-}
-
+// 3. Opsi Utama Pengujian
 export const options = {
-  stages: testStages,
-  discardResponseBodies: false, 
+  stages: stages[loadProfile] || stages.low, // Pilih stage sesuai profil, default ke 'low'
   thresholds: {
-    'http_req_duration': ['p(95)<200'], 
-    'success_rate': ['rate>=0.99'],     
-    'error_rate': ['rate<0.01'],        
+    'http_req_duration': ['p(95)<200'],
+    'success_rate': ['rate>=0.99'],
+    'error_rate': ['rate<0.01'],
   },
 };
 
+// 4. Logika Utama yang Dijalankan oleh Virtual User
 export default function () {
-  const targetURL = __ENV.TARGET_URL || 'http://localhost:3000/api/data';
-
+  const targetURL = __ENV.TARGET_URL;
   const res = http.get(targetURL);
-
-  const isSuccess = check(res, {
-    'Status is 200 OK': (r) => r.status === 200,
-  });
+  const isSuccess = check(res, { 'Status is 200 OK': (r) => r.status === 200 });
 
   responseTime.add(res.timings.duration);
   successRate.add(isSuccess);
@@ -75,12 +56,14 @@ export default function () {
   sleep(1);
 }
 
-// export function handleSummary(data) {
-//     console.log('Finished executing tests. Summary report:');
-    
-//     console.log(textSummary(data, { indent: ' ', enableColors: true }));
-    
-//     return {
-//         'summary.json': JSON.stringify(data, null, 2), 
-//     };
-// }
+// 5. Fungsi untuk Menghasilkan Laporan HTML
+export function handleSummary(data) {
+  // Membuat nama file yang unik berdasarkan profil beban dan waktu saat ini
+  const profile = loadProfile.toUpperCase();
+  const timestamp = new Date().toISOString().replace(/:/g, '-');
+  const filename = `report-${profile}-${timestamp}.html`;
+
+  return {
+    [filename]: htmlReport(data),
+  };
+}
