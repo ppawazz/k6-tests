@@ -2,16 +2,13 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate, Counter } from 'k6/metrics';
 
-// Mendefinisikan metrik kustom untuk dicatat selama pengujian.
 export const responseTime = new Trend('response_time_ms');
 export const successRate = new Rate('success_rate');
 export const errorRate = new Rate('error_rate');
 export const requestCounter = new Counter('total_requests');
 
-// Mengambil profil beban (low, medium, high) dari perintah yang dijalankan.
 const loadProfile = __ENV.LOAD_PROFILE || 'low';
 
-// Definisi tahapan beban untuk setiap profil.
 const stages = {
   low: [
     { duration: '15s', target: 50 },
@@ -33,7 +30,6 @@ const stages = {
   ],
 };
 
-// Opsi utama untuk pengujian K6.
 export const options = {
   stages: stages[loadProfile] || stages.low,
   thresholds: {
@@ -43,7 +39,6 @@ export const options = {
   },
 };
 
-// Fungsi utama yang akan dijalankan oleh setiap Virtual User (VU).
 export default function () {
   const res = http.get(__ENV.TARGET_URL);
 
